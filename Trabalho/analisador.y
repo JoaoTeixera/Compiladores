@@ -4,10 +4,12 @@
     #include "hash.h"
     #include "analisador.tab.h"
 
-    extern FILE* yyin;
+    extern FILE *yyin;
 
     int yylex(void);
     void yyerror(char *);
+
+    int linha = 1;
 
     Item *tokens = NULL;
     Item *usuario = NULL;
@@ -18,9 +20,17 @@
 
 %}
 
-%token DIGITO
+%union {
+    int ival;     
+    double dval;  
+    char *sval;  
+}
+
+%token <ival> INTEIRO
+%token <dval> REAL
 %token LETRA
-%token ID
+%token <sval> ID
+%token <sval> BIB
 %token WHITESPACE
 %token ENTER
 %token ERRO
@@ -44,10 +54,10 @@
 %token IMPORT_TOK
 %token DEFINE_TOK
 
-%token MAIS_TOK
-%token MENOS_TOK
-%token DIV_TOK
-%token MULT_TOK
+%left MAIS_TOK
+%left MENOS_TOK
+%left DIV_TOK
+%left MULT_TOK
 %token MOD_TOK
 %token NEG_TOK
 %token OR_TOK
@@ -87,52 +97,126 @@
 %token A_CHA_TOK
 %token F_CHA_TOK
 
-
 %%
 
 program:
-    seq                                             {printf("FINALIZADO\n");}
-    |                                               {printf("NADA\n");}
+    imp program
+    | def program
+    | seq                                           {printf("Sintaticamente Correto!\n");}
+    |                                               {printf("Vazio\n");}
     ;
 seq:
-    dec PVIRG_TOK
-    | dec PVIRG_TOK seq                                     {printf("SEQUENCIA\n");}
+    dec PVIRG_TOK                                           {printf("Sequencia -> <declaracao> ;\n");}
+    | dec PVIRG_TOK seq                                     {printf("Sequencia -> <declaracao> ; <sequencia>\n");}
     ;   
 dec:
-    cond                                            {printf("DECLARACAO\n");}
-    | rep                                           {printf("DECLARACAO\n");}
-    | atr                                           {printf("DECLARACAO\n");}
-    | lei                                           {printf("DECLARACAO\n");}
-    | esc                                           {printf("DECLARACAO\n");}
-    | exp                                           {;}
+    main                                            {printf("Declaracao -> <main>\n");}
+    | cond                                          {printf("Declaracao -> <condicional>\n");}
+    | rep                                           {printf("Declaracao -> <repeticao>\n");}
+    | atr                                           {printf("Declaracao -> <atribuicao>\n");}
+    | lei                                           {printf("Declaracao -> <leitura>\n");}
+    | esc                                           {printf("Declaracao -> <escrita>\n");}
+    | exp                                           {printf("Declaracao -> <expressao>\n");}
+    | func                                          {printf("Declaracao -> <funcao>\n");}
+    | ret                                           {printf("Declaracao -> <retorno>\n");}
+    ;
+main:
+    tipo MAIN_TOK A_PAR_TOK F_PAR_TOK A_CHA_TOK seq F_CHA_TOK       {printf("Main -> <tipo> main ( ) { <sequencia> }\n");}
     ;
 cond:
-    IF_TOK exp A_CHA_TOK seq F_CHA_TOK                                      {printf("CONDICIONAL\n");}
-    | IF_TOK exp A_CHA_TOK seq F_CHA_TOK ELSE_TOK A_CHA_TOK seq F_CHA_TOK   {printf("CONDICIONAL\n");}
+    IF_TOK A_PAR_TOK exp F_PAR_TOK A_CHA_TOK seq F_CHA_TOK                                      {printf("Condicional -> if ( <expressao> ) { <sequencia> }\n");}
+    | IF_TOK A_PAR_TOK exp F_PAR_TOK A_CHA_TOK seq F_CHA_TOK ELSE_TOK A_CHA_TOK seq F_CHA_TOK   {printf("Condicional -> if ( <expressao> ) { <sequencia> } else { <sequencia> }\n");}
     ;
 rep: 
-    FOR_TOK exp A_CHA_TOK seq F_CHA_TOK                         {printf("REPETICAO\n");}
-    | WHILE_TOK exp A_CHA_TOK seq F_CHA_TOK                     {printf("REPETICAO\n");}
+    FOR_TOK A_PAR_TOK atr PVIRG_TOK exp PVIRG_TOK atr F_PAR_TOK A_CHA_TOK seq F_CHA_TOK     {printf("Repeticao -> for ( <atribuicao> ; <expressao> ; <atribuicao> ) { <sequencia> }\n");}
+    | WHILE_TOK A_PAR_TOK exp F_PAR_TOK A_CHA_TOK seq F_CHA_TOK                             {printf("Repeticao -> while ( <expressao> ) { <sequencia> }\n");}
     ;
 atr:
-    ID ATR_TOK exp                                   {printf("ATRIBUICAO\n");}
+    ID ATR_TOK exp                          {printf("Atribuicao -> %s = <expressao>\n", $1);}
+    | tipo ID ATR_TOK exp                   {printf("Atribuicao -> <tipo> %s = <expressao>\n", $2);}
+    | ID INC_TOK                            {printf("Atribuicao -> %s ++\n", $1);}
+    | ID DEC_TOK                            {printf("Atribuicao -> %s --\n", $1);}
+    | ID ATR_SM_TOK exp                     {printf("Atribuicao -> %s += <expressao>\n", $1);}
+    | ID ATR_DC_TOK exp                     {printf("Atribuicao -> %s -= <expressao>\n", $1);}
+    | ID ATR_MT_TOK exp                     {printf("Atribuicao -> %s *= <expressao>\n", $1);}
+    | ID ATR_DV_TOK exp                     {printf("Atribuicao -> %s /= <expressao>\n", $1);}
+    | ID ATR_MD_TOK exp                     {printf("Atribuicao -> %s %= <expressao>\n", $1);}
     ;           
-lei:    
-    SCAN_TOK ID                                     {printf("LEITURA\n");}
+lei:
+    SCAN_TOK A_PAR_TOK ID F_PAR_TOK         {printf("Leitura -> scan ( %s )\n", $3);}
     ;
 esc:
-    PRINT_TOK exp                                   {printf("ESCRITA\n");}
+    PRINT_TOK A_PAR_TOK exp F_PAR_TOK       {printf("Escrita -> print ( <expressao> )\n");}
     ;
 exp:
-    DIGITO                                      {printf("EXP\n");}
+    exp_simples comp exp_simples            {printf("Expressao -> <exp_simples> <comparacao> <exp_simples>\n");}
+    | exp_simples                           {printf("Expressao -> <exp_simples>\n");}
+    
     ;
-
-
+func:
+    tipo ID A_PAR_TOK lista_parametros F_PAR_TOK A_CHA_TOK seq F_CHA_TOK         {printf("Funcao -> <tipo> %s ( <lista_parametros> ) { <sequencia> }\n", $2);}
+    | tipo ID A_PAR_TOK F_PAR_TOK A_CHA_TOK seq F_CHA_TOK                       {printf("Funcao -> <tipo> %s ( ) { <sequencia> }\n", $2);}
+    ;
+lista_parametros:
+    parametro                                               {printf("Lista_parametros -> <parametro>\n");}
+    | lista_parametros VIRG_TOK parametro                   {printf("Lista_parametros -> <lista_parametros> , <parametro>\n");}
+    ;
+parametro:
+    tipo ID                 {printf("Parametro -> <tipo> %s\n", $2);}
+    ;
+ret:
+    RETURN_TOK exp       {printf("Retorno -> return <expressao>\n");}
+    ;
+imp:
+    IMPORT_TOK MEN_TOK BIB MAI_TOK               {printf("Importacao -> #import < %s > \n", $3);}
+    ;
+def:
+    DEFINE_TOK ID exp                               {printf("Definicao -> #define %s <expressao>\n", $2);}
+    ;
+comp:
+    MEN_TOK         {printf("Comparacao -> <\n");}
+    | IG_TOK        {printf("Comparacao -> ==\n");}
+    | MAI_TOK       {printf("Comparacao -> >\n");}
+    | DIF_TOK       {printf("Comparacao -> !=\n");}
+    | MAI_IG_TOK    {printf("Comparacao -> >=\n");}
+    | MEN_IG_TOK    {printf("Comparacao -> <=\n");}
+    ;
+exp_simples: 
+    exp_simples soma termo      {printf("Exp_simples -> <exp_simples> <soma> <termo>\n");}
+    | termo                     {printf("Exp_simples -> <termo>\n");}
+    ;
+soma:
+    MAIS_TOK                    {printf("Soma -> +\n");}
+    | MENOS_TOK                 {printf("Menos -> -\n");}
+termo:
+    termo mult termo            {printf("Termo -> <termo> <mult> <termo>\n");}
+    | fator                     {printf("Termo -> <fator>\n");}
+    ;
+mult:
+    MULT_TOK                    {printf("Mult -> *\n");}
+    | DIV_TOK                   {printf("Mult -> /\n");}
+    ;
+fator:
+    A_PAR_TOK exp F_PAR_TOK     {printf("Fator -> ( <expressao> )\n");}
+    | numero                    {printf("Fator -> <numero>\n");}
+    | ID                        {printf("Fator -> %s\n", $1);}
+    ;
+numero:
+    INTEIRO                     {printf("Numero -> %d\n", $1);}
+    | REAL                      {printf("Numero -> %lf\n", $1);}
+    ;
+tipo:
+    INT_TOK                       {printf("Tipo -> int\n");}
+    | DOUBLE_TOK                  {printf("Tipo -> double\n");}
+    | CHAR_TOK                    {printf("Tipo -> char\n");}
+    | FLOAT_TOK                   {printf("Tipo -> float\n");}
+    | VOID_TOK                    {printf("Tipo -> void\n");}
+    ;
 
 %%
 
 void yyerror(char *s){
-    printf("%s\n", s);
+    printf("erro na linha %d -> %s\n", linha, s);
 }
 
 int main(){	
@@ -157,13 +241,15 @@ int main(){
                 simbolo = limpaHash(simbolo);
                 h = criarHash(200);
                 simbolo = criarHash(200);
-                printf("\nDigite o caminho do arquivo: ");
+                printf("\nDigite o nome do arquivo: ");
                 scanf("%s", str);
+                strcat(str, ".txt");
                 arq = fopen(str, "r");
                 while(arq == NULL){
                     
-                    printf("Digite o caminho correto do arquivo: ");
+                    printf("Digite o nome correto do arquivo: "); 
                     scanf("%s", str);
+                    strcat(str, ".txt");
                     arq = fopen(str, "r");
                 }
 
@@ -185,11 +271,15 @@ int main(){
                 break;
     
         }
+        printf("Total de linhas: %d\n", linha);
 
     }while(opcao != 0);
-
     fclose(arq);
-    
     yyparse();     
 	return 0;
 }
+
+
+
+
+

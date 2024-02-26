@@ -4,17 +4,19 @@
     #include "hash.h"
     #include "analisador.tab.h"
     char err[10000];
-    int linha = 1;
+    extern int linha;
     int caractere = 0;
-
-    extern Hash *h, *simbolo;
+    extern Hash *h, *simbolo; 
 %}
 
 %option noyywrap
 
-DIGITO      [0-9]+
+INTEIRO     [0-9]+
+REAL        [0-9]+"."[0-9]+
 LETRA       [a-zA-z]
 ID          [a-zA-Z][a-zA-Z0-9]*
+BIB         [a-zA-Z][a-zA-Z0-9]*"."[a-zA-Z][a-zA-Z0-9]*
+
 WHITESPACE  [ \t]
 ENTER       [\n]
 ERRO        [@$¨~çÇ§¹²³£¢¬₢°`]
@@ -35,8 +37,8 @@ MAIN_TOK    main
 PRINT_TOK   print
 SCAN_TOK    scan
 RETURN_TOK  return
-IMPORT_TOK  import
-DEFINE_TOK  define
+IMPORT_TOK  #import
+DEFINE_TOK  #define
 
 MAIS_TOK    "+"
 MENOS_TOK   "-"
@@ -148,9 +150,11 @@ F_CHA_TOK   "}"
 "//"[^\n]*\n     {strcat(err, yytext); inserirHash(h, yytext, "COMENTARIO");}
 "/*"[^'*/']*"*/" {strcat(err, yytext); inserirHash(h, yytext, "COMENTARIO");}
 
-{ID}             {strcat(err, yytext); inserirHash(simbolo, yytext, "IDENTIFICADOR"); return ID;}
+{BIB}            {strcat(err, yytext); inserirHash(simbolo, yytext, "BIBLIOTECA"); yylval.sval = strdup(yytext); return BIB;}
+{ID}             {strcat(err, yytext); inserirHash(simbolo, yytext, "IDENTIFICADOR"); yylval.sval = strdup(yytext); return ID;}
 
-{DIGITO}         {strcat(err, yytext); inserirHash(simbolo, yytext, "DIGITO"); return DIGITO;}
+{REAL}           {strcat(err, yytext); inserirHash(simbolo, yytext, "REAL"); yylval.dval = atof(yytext); return REAL;}
+{INTEIRO}        {strcat(err, yytext); inserirHash(simbolo, yytext, "INTEIRO"); yylval.ival = atoi(yytext); return INTEIRO;}
 \"[^\"]*\"       {strcat(err, yytext); inserirHash(simbolo, yytext, "STRING");}
 
 {WHITESPACE}     {strcat(err, yytext);}

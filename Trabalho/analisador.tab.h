@@ -46,70 +46,84 @@ extern int yydebug;
    /* Put the tokens into the symbol table, so that GDB and other debuggers
       know about them.  */
    enum yytokentype {
-     DIGITO = 258,
-     LETRA = 259,
-     ID = 260,
-     WHITESPACE = 261,
-     ENTER = 262,
-     ERRO = 263,
-     ASPAS = 264,
-     IF_TOK = 265,
-     ELSE_TOK = 266,
-     FOR_TOK = 267,
-     WHILE_TOK = 268,
-     CHAR_TOK = 269,
-     INT_TOK = 270,
-     FLOAT_TOK = 271,
-     DOUBLE_TOK = 272,
-     VOID_TOK = 273,
-     MAIN_TOK = 274,
-     PRINT_TOK = 275,
-     SCAN_TOK = 276,
-     RETURN_TOK = 277,
-     IMPORT_TOK = 278,
-     DEFINE_TOK = 279,
-     MAIS_TOK = 280,
-     MENOS_TOK = 281,
-     DIV_TOK = 282,
-     MULT_TOK = 283,
-     MOD_TOK = 284,
-     NEG_TOK = 285,
-     OR_TOK = 286,
-     XOR_TOK = 287,
-     AND_TOK = 288,
-     L_AND_TOK = 289,
-     L_OR_TOK = 290,
-     L_SHL_TOK = 291,
-     L_SHR_TOK = 292,
-     INC_TOK = 293,
-     DEC_TOK = 294,
-     ATR_TOK = 295,
-     ATR_SM_TOK = 296,
-     ATR_DC_TOK = 297,
-     ATR_MT_TOK = 298,
-     ATR_DV_TOK = 299,
-     ATR_MD_TOK = 300,
-     IG_TOK = 301,
-     DIF_TOK = 302,
-     MEN_TOK = 303,
-     MAI_TOK = 304,
-     MAI_IG_TOK = 305,
-     MEN_IG_TOK = 306,
-     VIRG_TOK = 307,
-     PVIRG_TOK = 308,
-     DPONT_TOK = 309,
-     A_PAR_TOK = 310,
-     F_PAR_TOK = 311,
-     A_COL_TOK = 312,
-     F_COL_TOK = 313,
-     A_CHA_TOK = 314,
-     F_CHA_TOK = 315
+     INTEIRO = 258,
+     REAL = 259,
+     LETRA = 260,
+     ID = 261,
+     BIB = 262,
+     WHITESPACE = 263,
+     ENTER = 264,
+     ERRO = 265,
+     ASPAS = 266,
+     IF_TOK = 267,
+     ELSE_TOK = 268,
+     FOR_TOK = 269,
+     WHILE_TOK = 270,
+     CHAR_TOK = 271,
+     INT_TOK = 272,
+     FLOAT_TOK = 273,
+     DOUBLE_TOK = 274,
+     VOID_TOK = 275,
+     MAIN_TOK = 276,
+     PRINT_TOK = 277,
+     SCAN_TOK = 278,
+     RETURN_TOK = 279,
+     IMPORT_TOK = 280,
+     DEFINE_TOK = 281,
+     MAIS_TOK = 282,
+     MENOS_TOK = 283,
+     DIV_TOK = 284,
+     MULT_TOK = 285,
+     MOD_TOK = 286,
+     NEG_TOK = 287,
+     OR_TOK = 288,
+     XOR_TOK = 289,
+     AND_TOK = 290,
+     L_AND_TOK = 291,
+     L_OR_TOK = 292,
+     L_SHL_TOK = 293,
+     L_SHR_TOK = 294,
+     INC_TOK = 295,
+     DEC_TOK = 296,
+     ATR_TOK = 297,
+     ATR_SM_TOK = 298,
+     ATR_DC_TOK = 299,
+     ATR_MT_TOK = 300,
+     ATR_DV_TOK = 301,
+     ATR_MD_TOK = 302,
+     IG_TOK = 303,
+     DIF_TOK = 304,
+     MEN_TOK = 305,
+     MAI_TOK = 306,
+     MAI_IG_TOK = 307,
+     MEN_IG_TOK = 308,
+     VIRG_TOK = 309,
+     PVIRG_TOK = 310,
+     DPONT_TOK = 311,
+     A_PAR_TOK = 312,
+     F_PAR_TOK = 313,
+     A_COL_TOK = 314,
+     F_COL_TOK = 315,
+     A_CHA_TOK = 316,
+     F_CHA_TOK = 317
    };
 #endif
 
 
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
-typedef int YYSTYPE;
+typedef union YYSTYPE
+{
+/* Line 2058 of yacc.c  */
+#line 23 "analisador.y"
+
+    int ival;     
+    double dval;  
+    char *sval;  
+
+
+/* Line 2058 of yacc.c  */
+#line 126 "analisador.tab.h"
+} YYSTYPE;
 # define YYSTYPE_IS_TRIVIAL 1
 # define yystype YYSTYPE /* obsolescent; will be withdrawn */
 # define YYSTYPE_IS_DECLARED 1
